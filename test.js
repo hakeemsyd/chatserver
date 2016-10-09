@@ -14,21 +14,34 @@ var user2 = {name: 'hero'};
 var user3 = {name: 'gamma'};
 
 describe('Chat Server', function(){
-  it('should broadcast new user to all users', function(done){
+  it('should broadcast new user/user left to all users', function(done){
     var client1 = io.connect(socketURL, options);
     var client2 = io.connect(socketURL, options);
-    client1.emit('add user','hakeem');
-    client1.disconnect();
-    done();
-/*
-    client1.on('connection',function(data){
-      client1.emit('connection name', chatUser1);
 
-      var client2 = io.connect(socketURL, options);
+    client1.on('user joined', function(data){
+        data.username.should.equal('jhon');
+        data.numUsers.should.equal(2);
+    });
 
-      client2.on('connection', function(data){
-        client2.emit('connection name', chatUser2);
-      });
-    });*/
+    client1.on('user left', function(data){
+      data.username.should.equal('jhon');
+      data.numUsers.should.equal(1);
+      client1.disconnect();
+      done();
+    });
+
+    client2.on('user joined', function(data){
+      data.username.should.equal('hakeem');
+      data.numUsers.should.equal(1);
+      client2.disconnect();
+    });
+
+    client1.on('connect', function(){
+      client1.emit('add user','hakeem');
+    });
+
+    client2.on('connect', function(){
+      client2.emit('add user', 'jhon');
+    });
   });
 });
